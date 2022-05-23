@@ -24,7 +24,7 @@ int main(){
 	int uart_filestream = -1;
 	uart_filestream = open("/dev/serial0", O_RDWR | O_NOCTTY | O_NDELAY);	//Abre em modo escrita/leitura bloqueado
 	if (uart_filestream == -1){
-		printf("\nErro: nÃ£o Ã© possÃ­vel abrir o arquivo da UART.\n");
+		printf("\nErro: nao eh posssivel abrir o arquivo da UART.\n");
 	}
 	//Struct para configuracao dos parametros de comunicacao
 	struct termios options;
@@ -84,6 +84,7 @@ int main(){
 		switch (sensor){
 		    	case 1:
 		    		//Envia o codigo de endereco do DHT11
+				printf("\nRequisicao sendo enviada. Aguarde uns instantes");
 		   		uart_tx("0x01",uart_filestream); 
 		  	break;
 		    	default:
@@ -99,15 +100,14 @@ int main(){
 		if (uart_filestream != -1){
 			rx_length = read(uart_filestream, (void*)comandoResposta, 8); //Filestream, buffer para armazenar, numero maximo de bytes lidos
 			if (rx_length < 0){
-				printf("Ocorreu um erro na leitura de dados");
+				printf("\nOcorreu um erro na leitura de dados");
 			}
 			else if (rx_length == 0){
-				printf("Nenhum dado lido");
+				printf("\nNenhum dado lido");
 			}
 			else{
 				//Byte recebido
 				comandoResposta[rx_length] = '\0';
-				printf("\n bytes read : %s\n", comandoResposta);
 				if(strcmp(comandoResposta, "0x1F")==0){
 			     	printf("\nO sensor esta com problema");
 			  	}
@@ -116,20 +116,22 @@ int main(){
 				}
 			  	else if(strcmp(comandoResposta, "0x01")==0){
 			  		printf("\nMedida de umidade");
-					uart_rx(uart_filestream,dado);
-					printf("%s ",dado);
+					uart_rx(uart_filestream,dado); //Recebe o valor da umidade
+					printf("%s ",dado); //Imprime valor de umidade
 			  	}
 			 	else if(strcmp(comandoResposta, "0x02")==0){
 			 		printf("\nMedida de temperatura");
-					uart_rx(uart_filestream,dado);
-					printf("%s ",dado);
+					uart_rx(uart_filestream,dado); //Recebe o valor da temperatura
+					printf("%s ",dado); //Imprime valor da temperatura
 			 	}
+				else{
+					printf("\n\nErro no formato de dado recebido);
+				}
 			}
 		}
 		else{
 			printf("\nFalha na abertura do arquivo");
 		}
-
 		//Opcao de repetir o programa
 		printf("\nDigite 0 se deseja continuar no programa\n");
 		scanf("%i", &repeticaoMenu);
@@ -148,7 +150,6 @@ void uart_tx(char* tx_string, int uart_filestream){
 		printf("\nFalha na abertura do arquivo");
 	}
 }
-
 //----------------------------------------------------------------------------------------------------------------------------------
 //Funcao que recebe os dados de temperatura ou umidade
 void uart_rx(int uart_filestream, char* dado){
@@ -159,36 +160,35 @@ void uart_rx(int uart_filestream, char* dado){
 	if (uart_filestream != -1){
 		rx_length = read(uart_filestream, (void*)dadoInteiro, 8); //Filestream, buffer para armazenar, nÃºmero maximo de bytes lidos
 		if (rx_length < 0){
-			printf("Ocorreu um erro na leitura de dados");
+			printf("\nOcorreu um erro na leitura de dados");
 		}
 		else if (rx_length == 0){
-			printf("Nenhum dado lido");
+			printf("\nNenhum dado lido");
 		}
 		else{//Se tem dado lido
 			//Byte recebido
 			dadoInteiro[rx_length] = '\0';
-			printf("\n dado inteiro: %s\n", dadoInteiro);
+			//Copia o valor inteiro lido para a string dado
+			strcpy(dado, dadoInteiro);
 		}
 		sleep(1);
 	
 		//leitura do byte de dado 2
 		rx_length = read(uart_filestream, (void*)dadoFracao, 8); //Filestream, buffer para armazenar, numero maximo de bytes lidos
 		if (rx_length < 0){
-			printf("Ocorreu um erro na leitura de dados");
+			printf("\nOcorreu um erro na leitura de dados");
 		}
 		else if (rx_length == 0){
-			printf("Nenhum dado lido");
+			printf("\nNenhum dado lido");
 		}
 		else{
 			//Byte recebido
 			dadoFracao[rx_length] = '\0';
-			printf("\n bytes read : %s\n",dadoFracao);
+			//Concatena os valores da parte fracionaria com a inteira da medicao
+			strcat(dado, dadoFracao);
 		}
 	}
 	else{
 		printf("\nFalha na abertura do arquivo");
 	}
-	//Concatena os valores da parte inteira e fracionaria da medicao
-	strcat(dadoInteiro, dadoFracao);
-	strcpy(dado, dadoInteiro);
 }
