@@ -10,9 +10,10 @@ module DHT11 (
 	output [7:0] CRC,
 	output WAIT,
 	output DEBUG,
-	output error
-
+	output error,
+	output r,g,b
 );
+
 
 
 reg DHT_OUT, DIR, WAIT_REG, DEBUG_REG; // Registrador de saida
@@ -33,6 +34,14 @@ TRIS TRIS_DATA (
 	.READ(DHT_IN)
 );
 
+LED_RGB RGB(
+	.WAIT(WAIT),
+	.error(error),
+	.reset(RST),
+	.r(r),
+	.g(g),
+	.b(b)
+);
 
 assign HUM_INT[7] = INTDATA[0];
 assign HUM_INT[6] = INTDATA[1];
@@ -78,7 +87,6 @@ assign CRC[3] = INTDATA[36];
 assign CRC[2] = INTDATA[37];
 assign CRC[1] = INTDATA[38];
 assign CRC[0] = INTDATA[39];
-
 
 reg [3:0] STATE;
 
@@ -194,7 +202,7 @@ begin: FSM
 							end else begin
 								STATE <= S6;
 								error_REG <= 1'b0;
-								index <= 6'b0;
+								index <= 6'b0; // reseta o contador
 								COUNTER <= 26'b0;
 							end
 						end
@@ -273,7 +281,7 @@ begin: FSM
 							error_REG <= 1'b0;
 							index <= 6'b0;
 						end else begin
-							if(COUNTER < 1600000) begin
+							if(COUNTER < 16000000) begin
 								INTDATA <= 40'b0;
 								COUNTER <= COUNTER + 1'b1;
 								error_REG <= 1'b1;
