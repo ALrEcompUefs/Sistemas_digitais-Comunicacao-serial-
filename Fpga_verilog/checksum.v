@@ -16,21 +16,23 @@ output reg[31:0] out
 
 always @(*) begin
 
-	reg[7:0] aux;
+	out = 0;
+	reg[7:0] aux; // Variável auxiliar
 	
-	aux = data1 + data0 + data2 + data3;
+	aux = data1 + data0 + data2 + data3; // Somamos todos os valores e salvamos em aux
 	
-	if(check == aux) begin
+	if(check == aux) begin // Se aux for igual ao checksum, sem erro
 		error = 0;
+		out[31:24] = data3;
+		out[23:16] = data2;
+		out[15:8] = data1;
+		out[7:0] = data0;
 	end
-	else begin
+	else begin // Se aux for diferente, temos erro
 		error = 1;
 	end
 	
-	out[31:24] = data3;
-	out[23:16] = data2;
-	out[15:8] = data1;
-	out[7:0] = data0;
+	
 end
 
 endmodule

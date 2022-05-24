@@ -1,39 +1,44 @@
 module DHT11 (
-		input CLK,
-		input EN,
-		input RST,
-	inout DHT_DATA,
-	output [7:0] HUM_INT,
-	output [7:0] HUM_FLOAT,
-	output [7:0] TEMP_INT,
-	output [7:0] TEMP_FLOAT,
-	output [7:0] CRC,
-	output WAIT,
-	output DEBUG,
-	output error,
-	output r,g,b
+		input CLK, // clock
+		input EN, // enable
+		input RST, // reset
+	inout DHT_DATA, // pino serial de data
+	output [7:0] HUM_INT, // local onde fica salvo a parte Inteira de Umidade
+	output [7:0] HUM_FLOAT, // local onde fica salvo a parte Decimal de Umidade
+	output [7:0] TEMP_INT, // local onde fica salvo a parte Inteira de Temperatura
+	output [7:0] TEMP_FLOAT, // local onde fica salvo a parte Decimal de Temperatura
+	output [7:0] CRC, // Codigo do checksum
+	output WAIT, // indica estado de espera
+	output DEBUG, // para fins de debug
+	output error, // indica erro
+	output r,g,b // para cores do LED RGB
 );
 
 
 
-reg DHT_OUT, DIR, WAIT_REG, DEBUG_REG; // Registrador de saida
+reg DHT_OUT, DIR, WAIT_REG, DEBUG_REG; // Registradores de saida
+// DHT_OUT = O dado que, se lido corretamente, será enviado pelo leitor do sensor
+// DIR = direcao do tri-state
+// WAIT_REG = indica que esta em estado de espera
+// DEBUG_REG = para fins de debug
 reg [25:0] COUNTER; // Contador de ciclos para gerar delays
 reg [5:0] index;
 reg [39:0] INTDATA; // registrador de dados interno
 reg error_REG;
-wire DHT_IN;
+wire DHT_IN; 
 
 assign WAIT = WAIT_REG;
 assign DEBUG = DEBUG_REG;
 assign error = error_REG;
 
+// tri-state
 TRIS TRIS_DATA (
 	.PORT(DHT_DATA),
 	.DIR(DIR),
 	.SEND(DHT_OUT),
 	.READ(DHT_IN)
 );
-
+// Para o led-rgb
 LED_RGB RGB(
 	.WAIT(WAIT),
 	.error(error),
@@ -96,8 +101,8 @@ parameter S0=1, S1=2, S2=3, S3=4, S4=5, S5=6, S6=7, S7=8, S8=9, S9=10, STOP=0, S
 //Processo de FSM
 always @(posedge CLK)
 begin: FSM
-	if(EN == 1'b1) begin
-		if(RST == 1'b1) begin
+	if(EN == 1'b1) begin // a maquina de estados so funcionara caso o enable esteja ativo
+		if(RST == 1'b1) begin // o reset limpa as saidas e retorna o sensor para o estado inicial
 			DHT_OUT <= 1'b1;
 			WAIT_REG <= 1'b0;
 			COUNTER <= 26'b0;
